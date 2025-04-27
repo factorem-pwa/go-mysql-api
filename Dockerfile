@@ -2,17 +2,19 @@
 FROM golang:1.22.2-alpine AS builder
 WORKDIR /app
 
-# Copy and download dependencies
+# 1. Copy dependency files
 COPY go.mod go.sum ./
+
+# 2. Download dependencies
 RUN go mod download
 
-# Copy source and build
+# 3. Copy source code
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build \
-    -ldflags="-s -w" \  # Strip debug symbols
-    -o api .  # ← Critical fix: The "-o" must be on same line as "go build"
 
-# Final stage
+# 4. Fixed build command (all flags on one line)
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o api .
+
+# Final image
 FROM alpine:3.19
 WORKDIR /
 COPY --from=builder /app/api .
