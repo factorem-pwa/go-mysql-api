@@ -1,25 +1,19 @@
-# Build stage (Go 1.22.2)
+# Build stage
 FROM golang:1.22.2-alpine AS builder
-RUN apk add --no-cache git ca-certificates
 WORKDIR /app
 
-# Cache dependencies
+# Copy and download dependencies
 COPY go.mod go.sum ./
-RUN --mount=type=cache,target=/go/pkg/mod \
-    go mod download -x
+RUN go mod download
 
-# Copy and build
+# Copy source and build
 COPY . .
-RUN --mount=type=cache,target=/go/pkg/mod \
-    --mount=type=cache,target=/root/.cache/go-build \
-    CGO_ENABLED=0 GOOS=linux go build \
+RUN CGO_ENABLED=0 GOOS=linux go build \
     -ldflags="-s -w" \  # Strip debug symbols
-    -o /api .
+    -o api .  # ← Critical fix: The "-o" must be on same line as "go build"
 
-# Final stage (Alpine for minimal size)
+# Final stage
 FROM alpine:3.19
-RUN apk add --no-cache tzdata
 WORKDIR /
-COPY --from=builder /api /api
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-CMD ["/api"]
+COPY --from=builder /app/api .
+CMD ["./api"]
