@@ -5,6 +5,7 @@ services:
     build: 
       context: .
       dockerfile: Dockerfile
+    mem-limit: 1g
     image: go-api:latest
     ports:
       - "3000:3000"
