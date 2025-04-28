@@ -2,15 +2,17 @@ version: '3.8'
 
 services:
   api:
-    build: 
-      context: .
-      dockerfile: Dockerfile
-    mem-limit: 1g
+    build: .
     image: go-api:latest
     ports:
       - "3000:3000"
     env_file: 
       - .env
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1GB
     depends_on:
       db:
         condition: service_healthy
@@ -26,12 +28,17 @@ services:
       MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql  # Critical init file
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
     networks:
       - backend
 
