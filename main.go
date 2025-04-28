@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
