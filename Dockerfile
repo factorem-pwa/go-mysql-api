@@ -1,15 +1,14 @@
-# Build stage with timeout
+# Build stage
 FROM golang:1.22.2-alpine AS builder
 WORKDIR /app
 
-# 1. Cache dependencies
+# Cache dependencies
 COPY go.mod go.sum ./
-RUN timeout 120 go mod download || echo "Warning: Mod download timed out"
+RUN go mod download
 
-# 2. Copy source with build timeout
+# Build with explicit timeout shell command
 COPY . .
-RUN timeout 300 CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o api . || \
-    (echo "Build timed out after 300s" && exit 1)
+RUN sh -c "timeout 300 go build -ldflags=\"-s -w\" -o api . || (echo 'Build timed out after 300s'; exit 1)"
 
 # Final image
 FROM alpine:3.19
